@@ -54,6 +54,3 @@ Gemfile.lock
 
 # Used by RuboCop. Remote config files pulled in from inherit_from directive.
 # .rubocop-https?--*
-
-# ignore VSCode project configurations
-.vscode

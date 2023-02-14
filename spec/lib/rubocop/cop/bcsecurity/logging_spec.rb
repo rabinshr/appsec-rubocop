@@ -2,52 +2,55 @@
 
 RSpec.describe RuboCop::Cop::BcSecurity::LoggingRawPost, :config do
   describe 'dangerous logging' do
+    let(:message) { ::RuboCop::Cop::BcSecurity::LoggingRawPost::MSG }
+    let(:sink_message) { format(::RuboCop::Cop::BcSecurity::LoggingRawPost::SINK_MSG, name: 'message') }
+
     it 'registers offense when `raw_post` is an argument to Rails.logger.info' do
       expect_offense(<<~RUBY)
         Rails.logger.info("some text", raw_post)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'registers offense when `raw_post` is an argument to Rails.logger.warn' do
       expect_offense(<<~RUBY)
         Rails.logger.warn("some text", other_var, raw_post)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'registers offense when `raw_post` is an argument to Rails.logger.error' do
       expect_offense(<<~RUBY)
         Rails.logger.error("some text", raw_post, other_var)
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'registers offense for `raw_post` in dynamic string passed to Rails.logger method' do
       expect_offense(<<~RUBY)
         Rails.logger.error("some message: \#{raw_post}")
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'detects `@raw_post`' do
       expect_offense(<<~RUBY)
         Rails.logger.error("some message: \#{@raw_post}")
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'detects `request.raw_post`' do
       expect_offense(<<~RUBY)
         Rails.logger.error("some message: \#{request.raw_post}")
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
     it 'detects `raw_post.to_json`' do
       expect_offense(<<~RUBY)
         Rails.logger.error("some message: \#{raw_post.to_json}")
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
       RUBY
     end
 
@@ -55,9 +58,9 @@ RSpec.describe RuboCop::Cop::BcSecurity::LoggingRawPost, :config do
       expect_offense(<<~RUBY)
         def foo
           message = "some message: \#{raw_post}"
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
           Rails.logger.info(message, other)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `message` passed to logging call here.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{sink_message}
         end
       RUBY
     end
@@ -65,7 +68,7 @@ RSpec.describe RuboCop::Cop::BcSecurity::LoggingRawPost, :config do
     it 'detects real example using `log_from' do
       expect_offense(<<~RUBY)
         log_from(
-        ^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+        ^^^^^^^^^ #{message}
           method: __method__,
           status: :error,
           msg: "Receive notification with invalid gateway or profile: raw post=\#{raw_post}",
@@ -82,14 +85,14 @@ RSpec.describe RuboCop::Cop::BcSecurity::LoggingRawPost, :config do
           raise(BigCommerce::Error::Invalid, 'Invalid raw_post') if raw_post.blank?
 
           message = "[\#{gateway}_webhooks] Starting notification process for store: \#{store_id}, (raw_post: \#{raw_post})"
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
           Rails.logger.info(message, gateway: gateway, store_id: store_id)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `message` passed to logging call here.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{sink_message}
           BigPay::Payments::Notification::Processor::StripeUpe::StripeUpeNotificationProcessor.new(store_id, gateway, nil, raw_post).process_notification
           message = "[\#{gateway}_webhooks] Finish notification process for store: \#{store_id}, (raw_post: \#{raw_post})"
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{RuboCop::Cop::BcSecurity::LoggingRawPost::MSG}
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{message}
           Rails.logger.info(message, gateway: gateway, store_id: store_id)
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ `message` passed to logging call here.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ #{sink_message}
         rescue => e
           Rails.logger.error("[\#{gateway}_webhooks] Error while processing notification for store: \#{store_id}", gateway: gateway, store_id: store_id, message: e.message)
           raise e
