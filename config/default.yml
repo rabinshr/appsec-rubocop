@@ -1,0 +1,6 @@
+BcSecurity:
+  Enabled: true
+
+BcSecurity/LoggingRawPost:
+  Description: Detect instances where `raw_post` is passed to Rails.logger.*
+  Enabled: true
