@@ -19,7 +19,9 @@ Add `- appsec-rubocop-poc` under `require:` at the top of your `.rubocop.yml`.
 The following custom checks are enabled by default:
 
 - BcSecurity/LoggingRawPost
+- BcSecurity/LoggingObject
 
 Available checks:
 
 - BcSecurity/LoggingRawPost
+- BcSecurity/LoggingObject

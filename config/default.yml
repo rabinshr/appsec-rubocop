@@ -4,3 +4,7 @@ BcSecurity:
 BcSecurity/LoggingRawPost:
   Description: Detect instances where `raw_post` is passed to Rails.logger.*
   Enabled: true
+
+BcSecurity/LoggingObject:
+  Description: Detect instances where object's string representation is passed to Rails.logger.*
+  Enabled: true
